@@ -180,142 +180,150 @@ const AdvancedSquatCounter = () => {
   };
 
   useEffect(() => {
-    let camera;
-    let isComponentMounted = true;
-    const currentVideo = videoRef.current;
-
-    const setupPose = async () => {
+    const loadMediaPipe = async () => {
       try {
-        // First request camera permission
-        const permissionGranted = await requestCameraPermission();
-        if (!permissionGranted) return;
+        let camera;
+        let isComponentMounted = true;
+        const currentVideo = videoRef.current;
 
-
-        // Load dependencies only after camera permission is granted
-        const [
-          tf,
-          tfBackend,
-          mediapipePose,
-          mediapipeCamera,
-          mediapipeDrawing
-        ] = await Promise.all([
-          import('@tensorflow/tfjs-core'),
-          import('@tensorflow/tfjs-backend-webgl'),
-          import('@mediapipe/pose'),
-          import('@mediapipe/camera_utils'),
-          import('@mediapipe/drawing_utils')
-        ]);
-
-        // Ensure TensorFlow is ready
-        await window.tf?.ready();
-
-        // Initialize MediaPipe Pose
-        const pose = new window.Pose({
-          locateFile: (file) => {
-            return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
-          }
-        });
-
-        pose.setOptions({
-          modelComplexity: 1,
-          smoothLandmarks: true,
-          minDetectionConfidence: 0.5,
-          minTrackingConfidence: 0.5
-        });
-
-        pose.onResults((results) => {
-          if (isComponentMounted) {
-            drawPose(results);
-            checkSquat(results.poseLandmarks);
-          }
-        });
-
-        // Initialize camera only if we have permission and MediaPipe Camera is available
-        if (window.Camera && hasPermission && currentVideo) {
-          camera = new window.Camera(currentVideo, {
-            onFrame: async () => {
-              if (currentVideo && isComponentMounted) {
-                await pose.send({ image: currentVideo });
-              }
-            },
-            width: 640,
-            height: 480
-          });
-
+        const setupPose = async () => {
           try {
-            await camera.start();
-            setIsLoading(false);
-          } catch (cameraError) {
-            console.error('Error starting camera:', cameraError);
-            setError('Failed to start camera. Please refresh and try again.');
+            // First request camera permission
+            const permissionGranted = await requestCameraPermission();
+            if (!permissionGranted) return;
+
+
+            // Load dependencies only after camera permission is granted
+            const [
+              tf,
+              tfBackend,
+              mediapipePose,
+              mediapipeCamera,
+              mediapipeDrawing
+            ] = await Promise.all([
+              import('@tensorflow/tfjs-core'),
+              import('@tensorflow/tfjs-backend-webgl'),
+              import('@mediapipe/pose'),
+              import('@mediapipe/camera_utils'),
+              import('@mediapipe/drawing_utils')
+            ]);
+
+            // Ensure TensorFlow is ready
+            await window.tf?.ready();
+
+            // Initialize MediaPipe Pose
+            const pose = new window.Pose({
+              locateFile: (file) => {
+                return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+              }
+            });
+
+            pose.setOptions({
+              modelComplexity: 1,
+              smoothLandmarks: true,
+              minDetectionConfidence: 0.5,
+              minTrackingConfidence: 0.5
+            });
+
+            pose.onResults((results) => {
+              if (isComponentMounted) {
+                drawPose(results);
+                checkSquat(results.poseLandmarks);
+              }
+            });
+
+            // Initialize camera only if we have permission and MediaPipe Camera is available
+            if (window.Camera && hasPermission && currentVideo) {
+              camera = new window.Camera(currentVideo, {
+                onFrame: async () => {
+                  if (currentVideo && isComponentMounted) {
+                    await pose.send({ image: currentVideo });
+                  }
+                },
+                width: 640,
+                height: 480
+              });
+
+              try {
+                await camera.start();
+                setIsLoading(false);
+              } catch (cameraError) {
+                console.error('Error starting camera:', cameraError);
+                setError('Failed to start camera. Please refresh and try again.');
+                setIsLoading(false);
+              }
+            }
+          } catch (error) {
+            console.error('Error setting up pose detection:', error);
+            setError(`Failed to initialize: ${error.message}`);
             setIsLoading(false);
           }
+        };
+
+        const drawPose = (results) => {
+          const canvas = canvasRef.current;
+          if (!canvas || !results.poseLandmarks) return;
+
+          const ctx = canvas.getContext('2d');
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          // Draw landmarks
+          for (const landmark of results.poseLandmarks) {
+            const x = landmark.x * canvas.width;
+            const y = landmark.y * canvas.height;
+
+            ctx.beginPath();
+            ctx.arc(x, y, 5, 0, 2 * Math.PI);
+            ctx.fillStyle = '#00ffff';
+            ctx.fill();
+          }
+
+          // Draw connecting lines for legs and torso
+          const connections = [
+            [11, 13, 15], // left arm
+            [12, 14, 16], // right arm
+            [11, 23, 25, 27], // left leg
+            [12, 24, 26, 28], // right leg
+            [11, 12], // shoulders
+            [23, 24]  // hips
+          ];
+
+          ctx.strokeStyle = '#00ff00';
+          ctx.lineWidth = 2;
+
+          for (const connection of connections) {
+            for (let i = 0; i < connection.length - 1; i++) {
+              const start = results.poseLandmarks[connection[i]];
+              const end = results.poseLandmarks[connection[i + 1]];
+
+              ctx.beginPath();
+              ctx.moveTo(start.x * canvas.width, start.y * canvas.height);
+              ctx.lineTo(end.x * canvas.width, end.y * canvas.height);
+              ctx.stroke();
+            }
+          }
+        };
+
+        if (typeof window !== 'undefined') {
+          setupPose();
         }
+
+        return () => {
+          isComponentMounted = false;
+          if (camera) {
+            camera.stop();
+          }
+          if (currentVideo?.srcObject) {
+            const tracks = currentVideo.srcObject.getTracks();
+            tracks.forEach(track => track.stop());
+          }
+        };
       } catch (error) {
-        console.error('Error setting up pose detection:', error);
-        setError(`Failed to initialize: ${error.message}`);
-        setIsLoading(false);
+        console.error('Failed to load MediaPipe:', error);
       }
     };
 
-    const drawPose = (results) => {
-      const canvas = canvasRef.current;
-      if (!canvas || !results.poseLandmarks) return;
-
-      const ctx = canvas.getContext('2d');
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Draw landmarks
-      for (const landmark of results.poseLandmarks) {
-        const x = landmark.x * canvas.width;
-        const y = landmark.y * canvas.height;
-
-        ctx.beginPath();
-        ctx.arc(x, y, 5, 0, 2 * Math.PI);
-        ctx.fillStyle = '#00ffff';
-        ctx.fill();
-      }
-
-      // Draw connecting lines for legs and torso
-      const connections = [
-        [11, 13, 15], // left arm
-        [12, 14, 16], // right arm
-        [11, 23, 25, 27], // left leg
-        [12, 24, 26, 28], // right leg
-        [11, 12], // shoulders
-        [23, 24]  // hips
-      ];
-
-      ctx.strokeStyle = '#00ff00';
-      ctx.lineWidth = 2;
-
-      for (const connection of connections) {
-        for (let i = 0; i < connection.length - 1; i++) {
-          const start = results.poseLandmarks[connection[i]];
-          const end = results.poseLandmarks[connection[i + 1]];
-
-          ctx.beginPath();
-          ctx.moveTo(start.x * canvas.width, start.y * canvas.height);
-          ctx.lineTo(end.x * canvas.width, end.y * canvas.height);
-          ctx.stroke();
-        }
-      }
-    };
-
-    if (typeof window !== 'undefined') {
-      setupPose();
-    }
-
-    return () => {
-      isComponentMounted = false;
-      if (camera) {
-        camera.stop();
-      }
-      if (currentVideo?.srcObject) {
-        const tracks = currentVideo.srcObject.getTracks();
-        tracks.forEach(track => track.stop());
-      }
-    };
+    loadMediaPipe();
   }, [hasPermission, isLoading]);
 
   const getReady = () => {
