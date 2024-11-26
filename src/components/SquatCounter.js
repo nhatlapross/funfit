@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 
+// Safely check for browser environment
+const isBrowser = typeof window !== 'undefined';
+
 const findAngle = (p1, p2, p3) => {
   const radians = Math.atan2(p3.y - p2.y, p3.x - p2.x) -
     Math.atan2(p1.y - p2.y, p1.x - p2.x);
@@ -29,12 +32,12 @@ const AdvancedSquatCounter = () => {
     incorrectPosture: false
   });
 
-  // Thresholds
+  // Thresholds (unchanged from original)
   const THRESHOLDS = {
     HIP_KNEE_VERT: {
-      NORMAL: [0, 45],    // Standing position
-      TRANS: [45, 90],    // Transition
-      PASS: [90, 135]     // Deep squat
+      NORMAL: [0, 45],
+      TRANS: [45, 90],
+      PASS: [90, 135]
     },
     HIP_THRESH: [60, 120],
     KNEE_THRESH: [50, 100, 130],
@@ -42,8 +45,10 @@ const AdvancedSquatCounter = () => {
     OFFSET_THRESH: 30
   };
 
-  // Add camera permission request function
+  // Camera permission request function
   const requestCameraPermission = async () => {
+    if (!isBrowser) return false;
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -180,151 +185,171 @@ const AdvancedSquatCounter = () => {
   };
 
   useEffect(() => {
-    const loadMediaPipe = async () => {
+    let camera;
+    let isComponentMounted = true;
+    const currentVideo = videoRef.current;
+
+    const setupPose = async () => {
+      // Dynamically import dependencies only in browser
+      if (!isBrowser) return;
+
       try {
-        let camera;
-        let isComponentMounted = true;
-        const currentVideo = videoRef.current;
+        // First request camera permission
+        const permissionGranted = await requestCameraPermission();
+        if (!permissionGranted) return;
 
-        const setupPose = async () => {
-          try {
-            // First request camera permission
-            const permissionGranted = await requestCameraPermission();
-            if (!permissionGranted) return;
+        // Dynamically import libraries
+        const [
+          tf,
+          tfBackend,
+          mediapipePose,
+          mediapipeCamera,
+          mediapipeDrawing
+        ] = await Promise.all([
+          import('@tensorflow/tfjs-core'),
+          import('@tensorflow/tfjs-backend-webgl'),
+          import('@mediapipe/pose'),
+          import('@mediapipe/camera_utils'),
+          import('@mediapipe/drawing_utils')
+        ]);
 
+        // Debug logging
+        console.log('Mediapipe Pose Import:', mediapipePose);
+        console.log('Window Pose:', window.Pose);
 
-            // Load dependencies only after camera permission is granted
-            const [
-              tf,
-              tfBackend,
-              mediapipePose,
-              mediapipeCamera,
-              mediapipeDrawing
-            ] = await Promise.all([
-              import('@tensorflow/tfjs-core'),
-              import('@tensorflow/tfjs-backend-webgl'),
-              import('@mediapipe/pose'),
-              import('@mediapipe/camera_utils'),
-              import('@mediapipe/drawing_utils')
-            ]);
+        // Ensure TensorFlow is ready
+        await tf.ready();
+        await tf.setBackend('webgl');
 
-            // Ensure TensorFlow is ready
-            await window.tf?.ready();
+        // Create Pose instance using global Pose constructor or direct import
+        const PoseCtor = window.Pose || mediapipePose.Pose;
 
-            // Initialize MediaPipe Pose
-            const pose = new window.Pose({
-              locateFile: (file) => {
-                return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
-              }
-            });
-
-            pose.setOptions({
-              modelComplexity: 1,
-              smoothLandmarks: true,
-              minDetectionConfidence: 0.5,
-              minTrackingConfidence: 0.5
-            });
-
-            pose.onResults((results) => {
-              if (isComponentMounted) {
-                drawPose(results);
-                checkSquat(results.poseLandmarks);
-              }
-            });
-
-            // Initialize camera only if we have permission and MediaPipe Camera is available
-            if (window.Camera && hasPermission && currentVideo) {
-              camera = new window.Camera(currentVideo, {
-                onFrame: async () => {
-                  if (currentVideo && isComponentMounted) {
-                    await pose.send({ image: currentVideo });
-                  }
-                },
-                width: 640,
-                height: 480
-              });
-
-              try {
-                await camera.start();
-                setIsLoading(false);
-              } catch (cameraError) {
-                console.error('Error starting camera:', cameraError);
-                setError('Failed to start camera. Please refresh and try again.');
-                setIsLoading(false);
-              }
-            }
-          } catch (error) {
-            console.error('Error setting up pose detection:', error);
-            setError(`Failed to initialize: ${error.message}`);
-            setIsLoading(false);
-          }
-        };
-
-        const drawPose = (results) => {
-          const canvas = canvasRef.current;
-          if (!canvas || !results.poseLandmarks) return;
-
-          const ctx = canvas.getContext('2d');
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-          // Draw landmarks
-          for (const landmark of results.poseLandmarks) {
-            const x = landmark.x * canvas.width;
-            const y = landmark.y * canvas.height;
-
-            ctx.beginPath();
-            ctx.arc(x, y, 5, 0, 2 * Math.PI);
-            ctx.fillStyle = '#00ffff';
-            ctx.fill();
-          }
-
-          // Draw connecting lines for legs and torso
-          const connections = [
-            [11, 13, 15], // left arm
-            [12, 14, 16], // right arm
-            [11, 23, 25, 27], // left leg
-            [12, 24, 26, 28], // right leg
-            [11, 12], // shoulders
-            [23, 24]  // hips
-          ];
-
-          ctx.strokeStyle = '#00ff00';
-          ctx.lineWidth = 2;
-
-          for (const connection of connections) {
-            for (let i = 0; i < connection.length - 1; i++) {
-              const start = results.poseLandmarks[connection[i]];
-              const end = results.poseLandmarks[connection[i + 1]];
-
-              ctx.beginPath();
-              ctx.moveTo(start.x * canvas.width, start.y * canvas.height);
-              ctx.lineTo(end.x * canvas.width, end.y * canvas.height);
-              ctx.stroke();
-            }
-          }
-        };
-
-        if (typeof window !== 'undefined') {
-          setupPose();
+        if (typeof PoseCtor !== 'function') {
+          throw new Error('Pose constructor not found');
         }
 
-        return () => {
-          isComponentMounted = false;
-          if (camera) {
-            camera.stop();
+        const pose = new PoseCtor({
+          locateFile: (file) => {
+            return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
           }
-          if (currentVideo?.srcObject) {
-            const tracks = currentVideo.srcObject.getTracks();
-            tracks.forEach(track => track.stop());
+        });
+
+        pose.setOptions({
+          modelComplexity: 1,
+          smoothLandmarks: true,
+          minDetectionConfidence: 0.5,
+          minTrackingConfidence: 0.5
+        });
+
+        pose.onResults((results) => {
+          if (isComponentMounted) {
+            drawPose(results);
+            checkSquat(results.poseLandmarks);
           }
-        };
+        });
+
+        // Initialize camera 
+        const CameraModule = mediapipeCamera.Camera || window.Camera;
+        
+        if (CameraModule && hasPermission && currentVideo) {
+          camera = new CameraModule(currentVideo, {
+            onFrame: async () => {
+              if (currentVideo && isComponentMounted) {
+                await pose.send({ image: currentVideo });
+              }
+            },
+            width: 640,
+            height: 480
+          });
+
+          try {
+            await camera.start();
+            setIsLoading(false);
+          } catch (cameraError) {
+            console.error('Error starting camera:', cameraError);
+            setError('Failed to start camera. Please refresh and try again.');
+            setIsLoading(false);
+          }
+        }
       } catch (error) {
-        console.error('Failed to load MediaPipe:', error);
+        console.error('Error setting up pose detection:', error);
+        setError(`Failed to initialize: ${error.message}`);
+        setIsLoading(false);
       }
     };
 
-    loadMediaPipe();
+    // Add script to load MediaPipe globally
+    const loadMediaPipeScript = () => {
+      if (isBrowser && !window.Pose) {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js';
+        script.async = true;
+        script.onload = setupPose;
+        document.body.appendChild(script);
+      } else {
+        setupPose();
+      }
+    };
+
+    if (isBrowser) {
+      loadMediaPipeScript();
+    }
+
+    return () => {
+      isComponentMounted = false;
+      if (camera) {
+        camera.stop();
+      }
+      if (currentVideo?.srcObject) {
+        const tracks = currentVideo.srcObject.getTracks();
+        tracks.forEach(track => track.stop());
+      }
+    };
   }, [hasPermission, isLoading]);
+
+  const drawPose = (results) => {
+    const canvas = canvasRef.current;
+    if (!canvas || !results.poseLandmarks) return;
+
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw landmarks
+    for (const landmark of results.poseLandmarks) {
+      const x = landmark.x * canvas.width;
+      const y = landmark.y * canvas.height;
+
+      ctx.beginPath();
+      ctx.arc(x, y, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = '#00ffff';
+      ctx.fill();
+    }
+
+    // Draw connecting lines for legs and torso
+    const connections = [
+      [11, 13, 15], // left arm
+      [12, 14, 16], // right arm
+      [11, 23, 25, 27], // left leg
+      [12, 24, 26, 28], // right leg
+      [11, 12], // shoulders
+      [23, 24]  // hips
+    ];
+
+    ctx.strokeStyle = '#00ff00';
+    ctx.lineWidth = 2;
+
+    for (const connection of connections) {
+      for (let i = 0; i < connection.length - 1; i++) {
+        const start = results.poseLandmarks[connection[i]];
+        const end = results.poseLandmarks[connection[i + 1]];
+
+        ctx.beginPath();
+        ctx.moveTo(start.x * canvas.width, start.y * canvas.height);
+        ctx.lineTo(end.x * canvas.width, end.y * canvas.height);
+        ctx.stroke();
+      }
+    }
+  };
 
   const getReady = () => {
     setIsLoading(!isLoading);
@@ -345,7 +370,7 @@ const AdvancedSquatCounter = () => {
   return (
     <div className="flex flex-col items-center gap-4 p-4 bg-gray-900 min-h-screen">
       <div>
-        <button onClick={() => getReady()}>Start</button>
+        <button onClick={() => setIsLoading(!isLoading)}>Start</button>
       </div>
       <div className="flex gap-8 mb-4">
         <h2 className="text-2xl font-bold text-green-400">
@@ -357,8 +382,7 @@ const AdvancedSquatCounter = () => {
       </div>
 
       {feedback && (
-        <h2 className={`text-3xl font-semibold mb-4 ${feedback.includes('Perfect') ? 'text-green-400' : 'text-yellow-400'
-          }`}>
+        <h2 className={`text-3xl font-semibold mb-4 ${feedback.includes('Perfect') ? 'text-green-400' : 'text-yellow-400'}`}>
           {feedback}
         </h2>
       )}
