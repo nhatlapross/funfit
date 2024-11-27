@@ -23,6 +23,7 @@ const AdvancedSquatCounter = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [hasPermission, setHasPermission] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(640);
 
   // State tracking
   const stateRef = useRef({
@@ -45,6 +46,25 @@ const AdvancedSquatCounter = () => {
     OFFSET_THRESH: 30
   };
 
+  useEffect(() => {
+    const handleResize = () => {
+      // Change the aspect ratio multiplier from 0.75 to a larger value, like 0.9
+      const width = isBrowser
+        ? Math.min(window.innerWidth * 0.95, 640)
+        : 640;
+      setWindowWidth(width);
+    };
+
+    // Initial setup
+    handleResize();
+
+    // Add resize listener
+    if (isBrowser) {
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
+  }, []);
+
   // Camera permission request function
   const requestCameraPermission = async () => {
     if (!isBrowser) return false;
@@ -52,8 +72,8 @@ const AdvancedSquatCounter = () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          width: 640,
-          height: 480
+          width: { ideal: windowWidth },
+          height: { ideal: Math.floor(windowWidth * 0.75) }
         }
       });
 
@@ -250,7 +270,7 @@ const AdvancedSquatCounter = () => {
 
         // Initialize camera 
         const CameraModule = mediapipeCamera.Camera || window.Camera;
-        
+
         if (CameraModule && hasPermission && currentVideo) {
           camera = new CameraModule(currentVideo, {
             onFrame: async () => {
@@ -368,38 +388,52 @@ const AdvancedSquatCounter = () => {
   }, [correctSquats, incorrectSquats])
 
   return (
-    <div className="flex flex-col items-center gap-4 p-4 bg-gray-900 min-h-screen">
-      <div>
-        <button onClick={() => setIsLoading(!isLoading)}>Start</button>
+    <div className="flex flex-col items-center gap-4 p-4 bg-gray-900 min-h-screen w-full">
+      <div className="flex items-center gap-8 mb-4">
+        <h1 className="text-2xl sm:text-3xl font-bold text-white">Squat with AI trainer</h1>
       </div>
-      <div className="flex gap-8 mb-4">
-        <h2 className="text-2xl font-bold text-green-400">
+      <div className="w-full max-w-[640px] px-4">
+        <button
+          className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition"
+          onClick={() => setIsLoading(!isLoading)}
+        >
+          {isLoading ? 'Start Exercise' : 'Restart'}
+        </button>
+      </div>
+
+      <div className="flex justify-center gap-8 mb-4">
+        <h2 className="text-xl sm:text-2xl font-bold text-green-400">
           Correct: {correctSquats}
         </h2>
-        <h2 className="text-2xl font-bold text-red-400">
+        <h2 className="text-xl sm:text-2xl font-bold text-red-400">
           Incorrect: {incorrectSquats}
         </h2>
       </div>
 
       {feedback && (
-        <h2 className={`text-3xl font-semibold mb-4 ${feedback.includes('Perfect') ? 'text-green-400' : 'text-yellow-400'}`}>
+        <h2 className={`text-2xl sm:text-3xl font-semibold mb-4 text-center ${feedback.includes('Perfect') ? 'text-green-400' : 'text-yellow-400'}`}>
           {feedback}
         </h2>
       )}
 
       {error && (
-        <div className="text-red-400 text-xl mb-4">
+        <div className="text-red-400 text-lg sm:text-xl mb-4 text-center">
           Error: {error}
         </div>
       )}
 
       {isLoading ? (
-        <div className="text-xl text-white">Click start button to start your exercise</div>
+        <div className="text-lg sm:text-xl text-white text-center">
+          Click start button to begin your exercise
+        </div>
       ) : (
-        <div className="relative w-[640px] h-[480px] transform-gpu">
+        <div
+          className="relative w-full max-w-[640px] aspect-video"
+          style={{ maxHeight: '600px' }}  // Increased from 480px
+        >
           <video
             ref={videoRef}
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover rounded-lg"
             style={{ transform: 'scaleX(-1)' }}
             playsInline
             muted
@@ -408,8 +442,8 @@ const AdvancedSquatCounter = () => {
           <canvas
             ref={canvasRef}
             className="absolute inset-0 w-full h-full"
-            width={640}
-            height={480}
+            width={windowWidth}
+            height={Math.floor(windowWidth * 0.9)}  // Changed from 0.75 to 0.9
             style={{
               transform: 'scaleX(-1)',
               zIndex: 1
@@ -418,9 +452,9 @@ const AdvancedSquatCounter = () => {
         </div>
       )}
 
-      <div className="mt-4 text-gray-300 text-center">
-        <p>Stand in front of the camera where your full body is visible.</p>
-        <p>Perform squats with proper form to increase your count!</p>
+      <div className="mt-4 text-gray-300 text-center px-4">
+        <p className="text-sm sm:text-base">Stand in front of the camera where your full body is visible.</p>
+        <p className="text-sm sm:text-base">Perform squats with proper form to increase your count!</p>
       </div>
     </div>
   );
