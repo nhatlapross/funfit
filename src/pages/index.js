@@ -1,10 +1,10 @@
-import SquatCounter from "../components/SquatCounter";
+import  MissionCards  from "@/components/ListNFT/MissionCards";
 
 export default function Home() {
 
     return (
         <div>
-            <SquatCounter />
+            <MissionCards />
         </div>
     );
 }

@@ -40,10 +40,10 @@ const AIFitnessFooter = () => {
         <div className="space-y-4">
           <h3 className="text-xl font-semibold mb-4">Connect With Us</h3>
           <div className="flex space-x-4">
-            <a href="#" className="text-gray-300 hover:text-blue-500 transition">
+            <a href="https://wefit365.vercel.app/" className="text-gray-300 hover:text-blue-500 transition">
               <Github className="w-6 h-6" />
             </a>
-            <a href="#" className="text-gray-300 hover:text-blue-500 transition">
+            <a href="https://x.com/Wefit365Inc" className="text-gray-300 hover:text-blue-500 transition">
               <Twitter className="w-6 h-6" />
             </a>
             <a href="#" className="text-gray-300 hover:text-blue-500 transition">
@@ -55,8 +55,8 @@ const AIFitnessFooter = () => {
           </div>
           <div className="flex items-center space-x-2 mt-4">
             <MessageCircle className="w-5 h-5 text-blue-500" />
-            <a href="mailto:support@aifitnesspro.com" className="hover:text-blue-500">
-              wefit365inc@aifitnesspro.com
+            <a href="mailto:nhatlapross@gmail.com" className="hover:text-blue-500">
+              nhatlapross@gmail.com
             </a>
           </div>
         </div>
