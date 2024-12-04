@@ -1,11 +1,11 @@
 "use client"
-
 import { Button } from "@/components/ui/button"
 import { Lock } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 export default function MissionCards() {
   const router = useRouter();
+  
   const missions = [
     {
       title: "Squat Mission",
@@ -13,7 +13,7 @@ export default function MissionCards() {
       image: "/squatAI.png",
       isLocked: false,
       correct: 5,
-      maxTurn:50,
+      maxTurn: 50,
     },
     {
       title: "Push Up Mission",
@@ -21,7 +21,7 @@ export default function MissionCards() {
       image: "/pushup.png",
       isLocked: true,
       correct: 10,
-      maxTurn:50,
+      maxTurn: 50,
     },
     {
       title: "Jumping Jack Mission",
@@ -29,7 +29,7 @@ export default function MissionCards() {
       image: "/jumpingjack.png",
       isLocked: true,
       correct: 20,
-      maxTurn:50,
+      maxTurn: 50,
     },
     {
       title: "Curl Crunch Mission",
@@ -37,7 +37,7 @@ export default function MissionCards() {
       image: "/curlcrunch.png",
       isLocked: true,
       correct: 30,
-      maxTurn:50,
+      maxTurn: 50,
     }
   ]
 
@@ -62,8 +62,7 @@ export default function MissionCards() {
               <img
                 src={mission.image}
                 alt={mission.title}
-                className={`w-full h-full object-cover
-                  ${mission.isLocked && "filter grayscale brightness-50"}`}
+                className={`w-full h-full object-cover ${mission.isLocked && "filter grayscale brightness-50"}`}
               />
               {/* Gradient overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
@@ -78,8 +77,7 @@ export default function MissionCards() {
               
               {/* Text content */}
               <div className="absolute bottom-0 left-0 right-0 p-4 text-left">
-                <h3 className={`text-xl font-bold mb-1 flex items-center gap-2
-                  ${mission.isLocked ? "text-white/60" : "text-white"}`}>
+                <h3 className={`text-xl font-bold mb-1 flex items-center gap-2 ${mission.isLocked ? "text-white/60" : "text-white"}`}>
                   {mission.title}
                 </h3>
                 <p className={`text-sm ${mission.isLocked ? "text-gray-400" : "text-gray-200"}`}>
