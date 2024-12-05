@@ -12,7 +12,7 @@ import {
 
 const AIFitnessFooter = () => {
   return (
-    <footer className="bg-gray-900 text-white py-12 px-4">
+    <footer className="bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white py-12 px-4">
       <div className="container mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Brand Section */}
         <div className="flex flex-col items-start space-y-4">

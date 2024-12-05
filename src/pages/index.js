@@ -1,10 +1,9 @@
-import MissionCards from "@/components/ListNFT/MissionCards";
-
+import BlockchainFitnessLanding from "@/components/LandingPage/Landing";
 export default function Home() {
 
     return (
-        <div className="bg-gray-900 min-h-screen text-white flex items-center justify-center">
-            <MissionCards />
+        <div className="w-full">
+            <BlockchainFitnessLanding />
         </div>
     );
 }

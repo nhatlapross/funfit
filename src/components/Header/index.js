@@ -48,7 +48,9 @@ const CardanoNavbar = () => {
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex space-x-4">
-          <a className="hover:text-gray-300" onClick={() => router.push('/')}>Home</a>
+          <a className="hover:text-gray-300" onClick={() => router.push('/mint')}>Mint</a>
+          <a className="hover:text-gray-300" onClick={() => router.push('/mission')}>Exercie</a>
+          <a className="hover:text-gray-300" onClick={() => router.push('/hackathon')}>Hackathon</a>
           <a className="hover:text-gray-300" onClick={() => router.push('/profile')}>Profile</a>
         </div>
       </div>
@@ -90,7 +92,9 @@ const CardanoNavbar = () => {
       {isMobileMenuOpen && (
         <div className="absolute top-full left-0 w-full bg-gray-800 z-50">
           <div className="flex flex-col items-center py-4 space-y-4">
-            <a className="hover:text-gray-300" onClick={() => router.push('/')}>Home</a>
+            <a className="hover:text-gray-300" onClick={() => router.push('/mint')}>Mint</a>
+            <a className="hover:text-gray-300" onClick={() => router.push('/mission')}>Exercie</a>
+            <a className="hover:text-gray-300" onClick={() => router.push('/hackathon')}>Hackathon</a>
             <a className="hover:text-gray-300" onClick={() => router.push('/profile')}>Profile</a>
             {connected ? (
               <div className="flex flex-col items-center space-y-2">
