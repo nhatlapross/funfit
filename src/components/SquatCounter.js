@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { CheckCircle, Maximize2 } from 'lucide-react';
-
+import { useRouter } from 'next/navigation';
 // Safely check for browser environment
 const isBrowser = typeof window !== 'undefined';
 
@@ -28,6 +28,7 @@ const AdvancedSquatCounter = () => {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [successAnimation, setSuccessAnimation] = useState(false);
   const videoContainerRef = useRef(null);
+  const router = useRouter();
 
   // State tracking
   const stateRef = useRef({
@@ -416,9 +417,11 @@ const AdvancedSquatCounter = () => {
   useEffect(() => {
     if (correctSquats > 10) {
       window.alert("Your mission success!");
+      router.push('/mission');
     }
-    if (correctSquats + incorrectSquats > 20) {
+    if (correctSquats + incorrectSquats == 50) {
       window.alert("Your mission failed!");
+      router.push('/mission');
     }
 
   }, [correctSquats, incorrectSquats])
