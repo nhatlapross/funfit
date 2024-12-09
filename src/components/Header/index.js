@@ -52,6 +52,7 @@ const CardanoNavbar = () => {
           <a className="hover:text-gray-300" onClick={() => router.push('/mission')}>Exercie</a>
           <a className="hover:text-gray-300" onClick={() => router.push('/hackathon')}>Hackathon</a>
           <a className="hover:text-gray-300" onClick={() => router.push('/profile')}>Profile</a>
+          <a className="hover:text-gray-300" onClick={() => router.push('/marketplace')}>Market</a>
         </div>
       </div>
 
@@ -96,6 +97,7 @@ const CardanoNavbar = () => {
             <a className="hover:text-gray-300" onClick={() => router.push('/mission')}>Exercie</a>
             <a className="hover:text-gray-300" onClick={() => router.push('/hackathon')}>Hackathon</a>
             <a className="hover:text-gray-300" onClick={() => router.push('/profile')}>Profile</a>
+            <a className="hover:text-gray-300" onClick={() => router.push('/marketplace')}>Market</a>
             {connected ? (
               <div className="flex flex-col items-center space-y-2">
                 <div className="flex items-center space-x-2">

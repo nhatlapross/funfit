@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { CheckCircle, Maximize2 } from 'lucide-react';
 
 // Safely check for browser environment
 const isBrowser = typeof window !== 'undefined';
@@ -24,6 +25,9 @@ const AdvancedSquatCounter = () => {
   const [error, setError] = useState(null);
   const [hasPermission, setHasPermission] = useState(false);
   const [windowWidth, setWindowWidth] = useState(640);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [successAnimation, setSuccessAnimation] = useState(false);
+  const videoContainerRef = useRef(null);
 
   // State tracking
   const stateRef = useRef({
@@ -44,6 +48,11 @@ const AdvancedSquatCounter = () => {
     KNEE_THRESH: [50, 100, 130],
     ANKLE_THRESH: 80,
     OFFSET_THRESH: 30
+  };
+
+  const handleSuccessSquat = () => {
+    setSuccessAnimation(true);
+    setTimeout(() => setSuccessAnimation(false), 1500);
   };
 
   useEffect(() => {
@@ -165,6 +174,7 @@ const AdvancedSquatCounter = () => {
         !stateTracker.incorrectPosture) {
         setCorrectSquats(prev => prev + 1);
         setFeedback('Perfect squat! 🎉');
+        handleSuccessSquat();
       } else if (stateTracker.incorrectPosture ||
         (stateTracker.stateSeq.includes('s2') &&
           stateTracker.stateSeq.length === 1)) {
@@ -202,6 +212,32 @@ const AdvancedSquatCounter = () => {
     }
 
     stateRef.current.prevState = currentState;
+  };
+
+  const toggleFullScreen = () => {
+    const container = videoContainerRef.current;
+    
+    if (!isFullScreen) {
+      if (container.requestFullscreen) {
+        container.requestFullscreen();
+      } else if (container.mozRequestFullScreen) {
+        container.mozRequestFullScreen();
+      } else if (container.webkitRequestFullscreen) {
+        container.webkitRequestFullscreen();
+      } else if (container.msRequestFullscreen) {
+        container.msRequestFullscreen();
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+      }
+    }
   };
 
   useEffect(() => {
@@ -387,10 +423,35 @@ const AdvancedSquatCounter = () => {
 
   }, [correctSquats, incorrectSquats])
 
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullScreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
   return (
     <div className="flex flex-col items-center gap-4 p-4 bg-gray-900 min-h-screen w-full">
-      <div className="flex items-center gap-8 mb-4">
+      {successAnimation && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-green-500 bg-opacity-50 animate-ping">
+          <CheckCircle
+            size={200}
+            className="text-white animate-bounce"
+          />
+        </div>
+      )}
+      <div className="flex items-center justify-between w-full max-w-[640px] mb-4">
         <h1 className="text-2xl sm:text-3xl font-bold text-white">Squat with AI trainer</h1>
+        <button 
+          onClick={toggleFullScreen} 
+          className="text-white bg-blue-500 p-2 rounded-lg hover:bg-blue-600"
+        >
+          {isFullScreen ? 'Exit Full Screen' : 'Full Screen'}
+        </button>
       </div>
       <div className="w-full max-w-[640px] px-4">
         <button
@@ -401,14 +462,14 @@ const AdvancedSquatCounter = () => {
         </button>
       </div>
 
-      <div className="flex justify-center gap-8 mb-4">
+      {/* <div className="flex justify-center gap-8 mb-4">
         <h2 className="text-xl sm:text-2xl font-bold text-green-400">
           Correct: {correctSquats}
         </h2>
         <h2 className="text-xl sm:text-2xl font-bold text-red-400">
           Incorrect: {incorrectSquats}
         </h2>
-      </div>
+      </div> */}
 
       {feedback && (
         <h2 className={`text-2xl sm:text-3xl font-semibold mb-4 text-center ${feedback.includes('Perfect') ? 'text-green-400' : 'text-yellow-400'}`}>
@@ -422,15 +483,40 @@ const AdvancedSquatCounter = () => {
         </div>
       )}
 
-      {isLoading ? (
-        <div className="text-lg sm:text-xl text-white text-center">
-          Click start button to begin your exercise
-        </div>
-      ) : (
+{!isLoading && (
         <div
-          className="relative w-full max-w-[640px] aspect-video"
-          style={{ maxHeight: '600px' }}  // Increased from 480px
+          ref={videoContainerRef}
+          className={`relative w-full max-w-[640px] aspect-video ${isFullScreen ? 'fullscreen-container' : ''}`}
+          style={{ maxHeight: isFullScreen ? '100vh' : '600px' }}
         >
+          {/* Fullscreen Overlay for Scores and Feedback */}
+          {isFullScreen && (
+            <div className="absolute top-4 left-0 right-0 z-20 px-4">
+              <div className="flex justify-between items-center bg-black/50 rounded-lg p-2">
+                <div className="flex gap-8">
+                  <h2 className="text-xl sm:text-2xl font-bold text-green-400">
+                    Correct: {correctSquats}
+                  </h2>
+                  <h2 className="text-xl sm:text-2xl font-bold text-red-400">
+                    Incorrect: {incorrectSquats}
+                  </h2>
+                </div>
+                {feedback && (
+                  <h2 className={`text-xl sm:text-2xl font-semibold text-center ${feedback.includes('Perfect') ? 'text-green-400' : 'text-yellow-400'}`}>
+                    {feedback}
+                  </h2>
+                )}
+              </div>
+            </div>
+          )}
+
+          <button 
+            onClick={toggleFullScreen} 
+            className="absolute top-2 right-2 z-10 bg-white/30 rounded-full p-2 hover:bg-white/50 transition"
+          >
+            <Maximize2 className="text-white" />
+          </button>
+
           <video
             ref={videoRef}
             className="absolute inset-0 w-full h-full object-cover rounded-lg"
@@ -443,7 +529,7 @@ const AdvancedSquatCounter = () => {
             ref={canvasRef}
             className="absolute inset-0 w-full h-full"
             width={windowWidth}
-            height={Math.floor(windowWidth * 0.9)}  // Changed from 0.75 to 0.9
+            height={Math.floor(windowWidth * 0.9)}
             style={{
               transform: 'scaleX(-1)',
               zIndex: 1
@@ -451,6 +537,38 @@ const AdvancedSquatCounter = () => {
           />
         </div>
       )}
+
+      {/* Non-fullscreen version outside of fullscreen mode */}
+      {!isFullScreen && !isLoading && (
+        <>
+          <div className="flex justify-center gap-8 mb-4">
+            <h2 className="text-xl sm:text-2xl font-bold text-green-400">
+              Correct: {correctSquats}
+            </h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-red-400">
+              Incorrect: {incorrectSquats}
+            </h2>
+          </div>
+          {feedback && (
+            <h2 className={`text-2xl sm:text-3xl font-semibold mb-4 text-center ${feedback.includes('Perfect') ? 'text-green-400' : 'text-yellow-400'}`}>
+              {feedback}
+            </h2>
+          )}
+        </>
+      )}
+
+      {/* Global fullscreen styles */}
+      <style jsx global>{`
+        .fullscreen-container {
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100vw !important;
+          height: 100vh !important;
+          z-index: 9999 !important;
+          background: black !important;
+        }
+      `}</style>
 
       <div className="mt-4 text-gray-300 text-center px-4">
         <p className="text-sm sm:text-base">Stand in front of the camera where your full body is visible.</p>
