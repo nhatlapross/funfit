@@ -7,7 +7,6 @@ export default function NFTMissionsPage() {
       <div className="w-full">
         <MissionCards />
       </div>
-
     </div>
   )
 }

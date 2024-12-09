@@ -447,14 +447,14 @@ const AdvancedSquatCounter = () => {
           />
         </div>
       )}
-      <div className="flex items-center justify-between w-full max-w-[640px] mb-4">
-        <h1 className="text-2xl sm:text-3xl font-bold text-white">Squat with AI trainer</h1>
-        <button 
+      <div className="flex items-center justify-center w-full max-w-[640px] mb-4">
+        <h1 className="text-2xl sm:text-3xl font-bold text-white text-center">Squat with AI trainer</h1>
+        {/* <button 
           onClick={toggleFullScreen} 
           className="text-white bg-blue-500 p-2 rounded-lg hover:bg-blue-600"
         >
           {isFullScreen ? 'Exit Full Screen' : 'Full Screen'}
-        </button>
+        </button> */}
       </div>
       <div className="w-full max-w-[640px] px-4">
         <button
