@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress"
 import NFTSlider from "./nft-slider"
 import { Dumbbell, Flame, Footprints, Coins, PersonStanding } from 'lucide-react'
 import CardanoIcon from "@/asset/icon/CardanoIcon"
+import KaiaIcon from "@/asset/icon/KaiaIcon"
 
 // NFT-specific user profiles
 const nftProfiles = {
@@ -131,7 +132,7 @@ export default function ProfilePage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Cardano Assets</CardTitle>
+          <CardTitle>My Assets</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">

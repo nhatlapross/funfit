@@ -251,7 +251,7 @@ export default function NFTSlider({ onNFTUse }) {
                   onClick={CheckOnchain}
                   className="w-full hover:bg-gray-100 hover:text-gray-900 transition-colors duration-200"
                 >
-                  Check on-chain
+                  View in Explore
                 </Button>
               </div>
             </div>

@@ -9,13 +9,14 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { LoadingAnimation } from "@/components/MintNFT/loading-animation"
 import { ConfettiEffect } from "@/components/MintNFT/confetti-effect"
 import Image from 'next/image'
+import { useRouter } from 'next/router'
 
 export default function MintNFTPage() {
   const [isMinting, setIsMinting] = useState(false)
   const [nftName, setNftName] = useState('')
   const [mintedNFT, setMintedNFT] = useState(null)
   const [showConfetti, setShowConfetti] = useState(false)
-
+  const router = useRouter();
     // Array of avatar image paths
     const avatarImages = [
         '/avatar/bear1.png',
@@ -110,6 +111,7 @@ export default function MintNFTPage() {
                     objectFit="cover"
                   />
                 </div>
+                <button className='border-2 bg-blue-700 text-white mt-2' onClick={()=>router.push('/mission')}>Start your first exercise!</button>
               </motion.div>
             )}
           </AnimatePresence>

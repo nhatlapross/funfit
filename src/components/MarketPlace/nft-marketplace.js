@@ -7,13 +7,68 @@ import SellNFTModal from '@/components/MarketPlace/sell-nft-modal'
 import BuyNFTModal from '@/components/MarketPlace/buy-nft-modal'
 
 const mockNFTs = [
-    { id: '1', name: 'Cool Cat #1', image: '/avatar/bear1.png', price: null, owner: '0x1234...5678' },
-    { id: '2', name: 'Bored Ape #42', image: '/avatar/bear2.png', price: 1.5, owner: '0xMarket' },
-    { id: '3', name: 'Punk #007', image: '/avatar/buffalo1.png', price: 2.0, owner: '0xMarket' },
-    { id: '4', name: 'Doodle #123', image: '/avatar/buffalo2.png', price: null, owner: '0x1234...5678' },
-    { id: '5', name: 'Punk #007', image: '/avatar/pig1.png', price: 2.0, owner: '0xMarket' },
-    { id: '6', name: 'Doodle #123', image: '/avatar/pig2.png', price: null, owner: '0x1234...5678' },
+    { 
+        id: '1', 
+        name: 'Cool Cat #1', 
+        image: '/avatar/bear1.png', 
+        price: null, 
+        owner: '0x1234...5678',
+        level: 3,
+        days: 45,
+        points: 750
+    },
+    { 
+        id: '2', 
+        name: 'Bored Ape #42', 
+        image: '/avatar/bear2.png', 
+        price: 1.5, 
+        owner: '0xMarket',
+        level: 5,
+        days: 60,
+        points: 1200
+    },
+    { 
+        id: '3', 
+        name: 'Punk #007', 
+        image: '/avatar/buffalo1.png', 
+        price: 2.0, 
+        owner: '0xMarket',
+        level: 4,
+        days: 55,
+        points: 1000
+    },
+    { 
+        id: '4', 
+        name: 'Doodle #123', 
+        image: '/avatar/buffalo2.png', 
+        price: null, 
+        owner: '0x1234...5678',
+        level: 2,
+        days: 30,
+        points: 500
+    },
+    { 
+        id: '5', 
+        name: 'Punk #007', 
+        image: '/avatar/pig1.png', 
+        price: 2.0, 
+        owner: '0xMarket',
+        level: 6,
+        days: 75,
+        points: 1500
+    },
+    { 
+        id: '6', 
+        name: 'Doodle #123', 
+        image: '/avatar/pig2.png', 
+        price: null, 
+        owner: '0x1234...5678',
+        level: 1,
+        days: 15,
+        points: 250
+    }
 ]
+
 
 export default function NFTMarketplace() {
     const [nfts, setNfts] = useState(mockNFTs)
@@ -56,31 +111,35 @@ export default function NFTMarketplace() {
     const myNFTs = nfts.filter((nft) => nft.owner === '0x1234...5678')
 
     return (
-        <div>
+        <div className="bg-gray-900 min-h-screen p-8">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-2 bg-gray-600">
+                <TabsList className="grid grid-cols-2 bg-transparent border-gray-700">
                     <TabsTrigger
                         value="market"
-                        className={`px-4 py-2 text-center ${activeTab === 'market'
-                            ? 'bg-blue-500 text-white' // Active tab styles
-                            : 'bg-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white' // Inactive tab styles
-                            }`}
+                        className={`
+                                px-6 py-3 text-sm font-medium uppercase tracking-wider transition-all duration-300 ease-in-out
+                                ${activeTab === 'market'
+                                ? 'text-white border-b-2 border-blue-500'
+                                : 'text-gray-400 hover:text-gray-200 border-b-2 border-transparent hover:border-gray-600'}
+                            `}
                     >
                         Market
                     </TabsTrigger>
                     <TabsTrigger
                         value="my-nfts"
-                        className={`px-4 py-2 text-center ${activeTab === 'my-nfts'
-                            ? 'bg-blue-500 text-white' // Active tab styles
-                            : 'bg-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white' // Inactive tab styles
-                            }`}
+                        className={`
+                                px-6 py-3 text-sm font-medium uppercase tracking-wider transition-all duration-300 ease-in-out
+                                ${activeTab === 'my-nfts'
+                                ? 'text-white border-b-2 border-blue-500'
+                                : 'text-gray-400 hover:text-gray-200 border-b-2 border-transparent hover:border-gray-600'}
+                            `}
                     >
                         My NFTs
                     </TabsTrigger>
                 </TabsList>
-                <TabsContent value="market">
+                <TabsContent value="market" className="pt-6">
                     <div className="min-h-screen bg-gray-900 flex items-center justify-center py-16">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                             {marketNFTs.map((nft) => (
                                 <NFTCard
                                     key={nft.id}
@@ -94,9 +153,9 @@ export default function NFTMarketplace() {
                         </div>
                     </div>
                 </TabsContent>
-                <TabsContent value="my-nfts">
+                <TabsContent value="my-nfts" className="pt-6">
                     <div className="min-h-screen bg-gray-900 flex items-center justify-center py-16">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                             {myNFTs.map((nft) => (
                                 <NFTCard
                                     key={nft.id}
@@ -111,6 +170,8 @@ export default function NFTMarketplace() {
                     </div>
                 </TabsContent>
             </Tabs>
+
+
             {selectedNFT && (
                 <>
                     <SellNFTModal

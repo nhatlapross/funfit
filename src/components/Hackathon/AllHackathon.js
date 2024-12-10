@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { EffectCoverflow, Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/effect-coverflow';
 import 'swiper/css/pagination';
+
 const hackathons = [
     {
         id: 1,
@@ -50,7 +51,40 @@ const hackathons = [
         image: "/curlcrunch.png",
     }
 ];
-export default function AllHackathon() {
+
+export default function AllHackathon({ onJoinHackathon }) {
+    const [joinedHackathons, setJoinedHackathons] = useState({});
+    const [loadingStates, setLoadingStates] = useState({});
+
+    const handleJoinHackathon = (hackathon) => {
+        // Set loading state for this specific hackathon
+        setLoadingStates(prev => ({
+            ...prev,
+            [hackathon.id]: true
+        }));
+
+        // Simulate API call or blockchain transaction
+        setTimeout(() => {
+            // Update joined hackathons state
+            setJoinedHackathons(prev => ({
+                ...prev,
+                [hackathon.id]: {
+                    ...hackathon,
+                    joinedAt: new Date().toLocaleString()
+                }
+            }));
+
+            // Remove loading state
+            setLoadingStates(prev => ({
+                ...prev,
+                [hackathon.id]: false
+            }));
+
+            // Call the parent component's join handler to generate NFT
+            onJoinHackathon(hackathon);
+        }, 2000); // Simulated 2-second loading
+    };
+
     return (
         <div className="min-h-screen bg-gray-900 flex items-center justify-center py-16">
             <Swiper
@@ -60,7 +94,6 @@ export default function AllHackathon() {
                 centeredSlides={true}
                 spaceBetween={30}
                 breakpoints={{
-                    // When screen width is >= 320px
                     320: {
                         slidesPerView: 1,
                         coverflowEffect: {
@@ -71,7 +104,6 @@ export default function AllHackathon() {
                             slideShadows: false,
                         }
                     },
-                    // When screen width is >= 768px
                     768: {
                         slidesPerView: 2,
                         coverflowEffect: {
@@ -82,7 +114,6 @@ export default function AllHackathon() {
                             slideShadows: true,
                         }
                     },
-                    // When screen width is >= 1024px
                     1024: {
                         slidesPerView: 3,
                         coverflowEffect: {
@@ -111,13 +142,13 @@ export default function AllHackathon() {
                             <div className="p-6">
                                 <h2 className="text-xl font-semibold mb-2 text-white">{hackathon.name}</h2>
 
-                                <div className="grid grid-cols-2 gap-2 mb-4 text-gray-300">
-                                    <div>
+                                <div className="grid grid-cols-1 gap-2 mb-4 text-gray-300">
+                                    <div className="flex justify-between text-sm">
                                         <p className="text-sm text-gray-500">Type</p>
                                         <p className="font-medium">{hackathon.type}</p>
                                     </div>
 
-                                    <div>
+                                    <div className="flex justify-between text-sm">
                                         <p className="text-sm text-gray-500">Dates</p>
                                         <p className="font-medium">
                                             {new Date(hackathon.startDate).toLocaleDateString()} -
@@ -125,24 +156,63 @@ export default function AllHackathon() {
                                         </p>
                                     </div>
 
-                                    <div>
+                                    <div className="flex justify-between text-sm">
                                         <p className="text-sm text-gray-500">Participants</p>
                                         <p className="font-medium">
                                             {hackathon.participants}/{hackathon.maxParticipants}
                                         </p>
                                     </div>
 
-                                    <div>
+                                    <div className="flex justify-between text-sm">
                                         <p className="text-sm text-gray-500">Price</p>
                                         <p className="font-medium">${hackathon.price}</p>
                                     </div>
                                 </div>
 
-                                <button
-                                    className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition"
-                                >
-                                    Join Hackathon
-                                </button>
+                                {joinedHackathons[hackathon.id] ? (
+                                    <div className="w-full bg-green-600 text-white py-2 rounded-lg text-center">
+                                        <p>Joined Successfully</p>
+                                        <p className="text-sm">
+                                            Joined at: {joinedHackathons[hackathon.id].joinedAt}
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={() => handleJoinHackathon(hackathon)}
+                                        disabled={loadingStates[hackathon.id]}
+                                        className={`w-full text-white py-2 rounded-lg transition ${
+                                            loadingStates[hackathon.id] 
+                                                ? 'bg-gray-500 cursor-not-allowed' 
+                                                : 'bg-blue-500 hover:bg-blue-600'
+                                        }`}
+                                    >
+                                        {loadingStates[hackathon.id] ? (
+                                            <div className="flex items-center justify-center">
+                                                <svg 
+                                                    className="animate-spin h-5 w-5 mr-3" 
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <circle 
+                                                        className="opacity-25" 
+                                                        cx="12" 
+                                                        cy="12" 
+                                                        r="10" 
+                                                        stroke="currentColor" 
+                                                        strokeWidth="4"
+                                                    ></circle>
+                                                    <path 
+                                                        className="opacity-75" 
+                                                        fill="currentColor" 
+                                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                                    ></path>
+                                                </svg>
+                                                Joining...
+                                            </div>
+                                        ) : (
+                                            'Join Hackathon'
+                                        )}
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </SwiperSlide>
