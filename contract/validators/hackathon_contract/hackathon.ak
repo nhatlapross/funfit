@@ -37,25 +37,25 @@ validator hackathon {
     let challengeDatum = t.findDatumByChallengeId(challengeId)
     
     // Nếu thử thách hợp lệ và chưa được hoàn thành, thưởng NFT cho người tham gia
-    when challengeDatum != None {
-      // Tạo NFT cho người tham gia thử thách
-      let nftDatum = NFTData { owner: user, challengeId: challengeId }
-      let nftMintOutput = t.output(
-        t.walletAddress(user),
-        assets.from_lovelace(0),
-        InlineDatum(nftDatum)
-      )
-      let tx = Transaction {
-        inputs: [],
-        outputs: [nftMintOutput],
-        extra_signatories: [user],
-      }
+    when challengeDatum is {
+      Some(datum) -> {
+        // Tạo NFT cho người tham gia thử thách
+        let nftDatum = NFTData { owner: user, challengeId: challengeId }
+        let nftMintOutput = t.output(
+          t.walletAddress(user),
+          assets.from_lovelace(0),
+          InlineDatum(nftDatum)
+        )
+        let tx = Transaction {
+          inputs: [],
+          outputs: [nftMintOutput],
+          extra_signatories: [user],
+        }
 
-      // Đã tham gia và nhận NFT
-      True
-    }
-    else {
-      fail
+        // Đã tham gia và nhận NFT
+        True
+      }
+      None -> fail
     }
   }
 }

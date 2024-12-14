@@ -10,30 +10,26 @@ validator marketplace {
     let nftDatum = t.findDatumById(nftId)
 
     // Kiểm tra NFT có tồn tại
-    when nftDatum != None {
-      let nft = nftDatum
+    when nftDatum is {
+        Some(updatedNFT) -> {
+          // Kiểm tra người mua đã trả đủ tiền (hoặc ADA)
+          // Logic giá trị trả dựa vào số lượng, ADA, hay token tương ứng
+          // Cập nhật trạng thái bán hàng và chuyển NFT cho người mua
+          let updatedNFT = nftDatum  // Đã mua xong NFT
+          let output = t.output(
+            t.walletAddress(#"buyer_wallet"),
+            assets.from_lovelace(0),
+            InlineDatum(updatedNFT)
+          )
 
-      // Kiểm tra người mua đã trả đủ tiền (hoặc ADA)
-      // Logic giá trị trả dựa vào số lượng, ADA, hay token tương ứng
-
-      // Cập nhật trạng thái bán hàng và chuyển NFT cho người mua
-      let updatedNFT = nftDatum  // Đã mua xong NFT
-      let output = t.output(
-        t.walletAddress(#"buyer_wallet"),
-        assets.from_lovelace(0),
-        InlineDatum(updatedNFT)
-      )
-
-      let tx = Transaction {
-        inputs: [],
-        outputs: [output],
-        extra_signatories: [],
+          let tx = Transaction {
+            inputs: [],
+            outputs: [output],
+            extra_signatories: [],
+          }
+          True
       }
-
-      True
-    }
-    else {
-      fail  // Không tìm thấy NFT
+      None -> fail
     }
   }
 
@@ -42,29 +38,25 @@ validator marketplace {
     let nftDatum = t.findDatumById(nftId)
 
     // Kiểm tra nếu NFT tồn tại
-    when nftDatum != None {
-      let nft = nftDatum
+    when nftDatum is {
+      Some(nft) -> {
+        // Kiểm tra nếu người gọi là chủ sở hữu NFT
+        // Đảm bảo chỉ chủ sở hữu NFT mới có thể delist
 
-      // Kiểm tra nếu người gọi là chủ sở hữu NFT
-      // Đảm bảo chỉ chủ sở hữu NFT mới có thể delist
+        let output = t.output(
+          t.walletAddress(#"owner_wallet"),
+          assets.from_lovelace(0),
+          InlineDatum(nft)
+        )
 
-      let output = t.output(
-        t.walletAddress(#"owner_wallet"),
-        assets.from_lovelace(0),
-        InlineDatum(nft)
-      )
-
-      let tx = Transaction {
-        inputs: [],
-        outputs: [output],
-        extra_signatories: [],
-      }
-
-      True
+        let tx = Transaction {
+          inputs: [],
+          outputs: [output],
+          extra_signatories: [],
+        }
+        True
     }
-    else {
-      fail  // Không tìm thấy NFT
-    }
+    None -> fail
   }
 }
 
