@@ -1,84 +1,84 @@
 
-use aiken/collection/dict
-use aiken/collection/list
-use cardano/assets.{PolicyId}
-use cardano/transaction.{OutputReference, Transaction}
-use course/types.{Hackathon, MBuy, MDelist, MEdit, MarketAction, MarketDatum, NFTData}
-use cardano/address.{VerificationKey}
+// use aiken/collection/dict
+// use aiken/collection/list
+// use cardano/assets.{PolicyId}
+// use cardano/transaction.{OutputReference, Transaction}
+// use course/types.{Hackathon, MBuy, MDelist, MEdit, MarketAction, MarketDatum, NFTData}
+// use cardano/address.{VerificationKey}
 
-validator hackathon {
-  create_challenge(
-    challengeId: String,
-    rewardAmount: Int,
-    tx: Transaction
-  ) {
-    // Tạo thử thách hackathon mới, thưởng NFT cho người tham gia
-    let challengeDatum = Hackathon { id: challengeId, reward: rewardAmount }
+// validator hackathon {
+//   create_challenge(
+//     challengeId: String,
+//     rewardAmount: Int,
+//     tx: Transaction
+//   ) {
+//     // Tạo thử thách hackathon mới, thưởng NFT cho người tham gia
+//     let challengeDatum = Hackathon { id: challengeId, reward: rewardAmount }
     
-    // Tạo đầu ra cho thử thách hackathon
-    let output = t.output(
-      t.scriptAddress(#"hackathon_script_address"),
-      assets.from_lovelace(0),
-      InlineDatum(challengeDatum)
-    )
+//     // Tạo đầu ra cho thử thách hackathon
+//     let output = t.output(
+//       t.scriptAddress(#"hackathon_script_address"),
+//       assets.from_lovelace(0),
+//       InlineDatum(challengeDatum)
+//     )
 
-    let tx = Transaction {
-      inputs: [],
-      outputs: [output],
-      extra_signatories: [],
-    }
+//     let tx = Transaction {
+//       inputs: [],
+//       outputs: [output],
+//       extra_signatories: [],
+//     }
 
-    // Trả về kết quả là tạo thành công
-    True
-  }
+//     // Trả về kết quả là tạo thành công
+//     True
+//   }
 
-  participate(challengeId: String, user: VerificationKey, tx: Transaction) {
-    // Kiểm tra thử thách có hợp lệ không
-    let challengeDatum = t.findDatumByChallengeId(challengeId)
+//   participate(challengeId: String, user: VerificationKey, tx: Transaction) {
+//     // Kiểm tra thử thách có hợp lệ không
+//     let challengeDatum = t.findDatumByChallengeId(challengeId)
     
-    // Nếu thử thách hợp lệ và chưa được hoàn thành, thưởng NFT cho người tham gia
-    when challengeDatum is {
-      Some(datum) -> {
-        // Tạo NFT cho người tham gia thử thách
-        let nftDatum = NFTData { owner: user, challengeId: challengeId }
-        let nftMintOutput = t.output(
-          t.walletAddress(user),
-          assets.from_lovelace(0),
-          InlineDatum(nftDatum)
-        )
-        let tx = Transaction {
-          inputs: [],
-          outputs: [nftMintOutput],
-          extra_signatories: [user],
-        }
+//     // Nếu thử thách hợp lệ và chưa được hoàn thành, thưởng NFT cho người tham gia
+//     when challengeDatum is {
+//       Some(datum) -> {
+//         // Tạo NFT cho người tham gia thử thách
+//         let nftDatum = NFTData { owner: user, challengeId: challengeId }
+//         let nftMintOutput = t.output(
+//           t.walletAddress(user),
+//           assets.from_lovelace(0),
+//           InlineDatum(nftDatum)
+//         )
+//         let tx = Transaction {
+//           inputs: [],
+//           outputs: [nftMintOutput],
+//           extra_signatories: [user],
+//         }
 
-        // Đã tham gia và nhận NFT
-        True
-      }
-      None -> fail
-    }
-  }
-}
+//         // Đã tham gia và nhận NFT
+//         True
+//       }
+//       None -> fail
+//     }
+//   }
+// }
 
-test hackathonCreate() {
-  let tx = Transaction {
-    inputs: [],
-    outputs: [],
-    extra_signatories: [],
-  }
+// test hackathonCreate() {
+//   let tx = Transaction {
+//     inputs: [],
+//     outputs: [],
+//     extra_signatories: [],
+//   }
 
-  hackathon.create_challenge("daily_challenge", 1, tx)
-}
+//   hackathon.create_challenge("daily_challenge", 1, tx)
+// }
 
-test hackathonParticipate() {
-  let tx = Transaction {
-    inputs: [],
-    outputs: [],
-    extra_signatories: [],
-  }
+// test hackathonParticipate() {
+//   let tx = Transaction {
+//     inputs: [],
+//     outputs: [],
+//     extra_signatories: [],
+//   }
 
-  hackathon.participate("daily_challenge", #"user_1", tx)
-}
+//   hackathon.participate("daily_challenge", #"user_1", tx)
+// }
 
 
 
@@ -185,3 +185,78 @@ test hackathonParticipate() {
 //   assert vested_nft.point == 50
 // }
 
+use aiken/collection/dict
+use aiken/collection/list
+use cardano/crypto.{VerificationKey}
+use cardano/assets.{PolicyId}
+use cardano/transaction.{OutputReference, Transaction}
+
+validator hackathon {
+  create_challenge(challengeId: String, rewardAmount: Int, tx: Transaction) {
+    // Tạo thử thách hackathon mới, thưởng NFT cho người tham gia
+    let challengeDatum = Hackathon { id: challengeId, reward: rewardAmount }
+    // Tạo đầu ra cho thử thách hackathon
+    let output =
+      t.output(
+        t.scriptAddress(
+          #"abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+        ),
+        assets.from_lovelace(0),
+        InlineDatum(challengeDatum),
+      )
+
+    let tx =
+      Transaction { inputs: [], outputs: [output], extra_signatories: [] }
+
+    // Trả về kết quả là tạo thành công
+    True
+  }
+
+  participate(challengeId: String, user: VerificationKey, tx: Transaction) {
+    // Kiểm tra thử thách có hợp lệ không
+    let challengeDatum = t.findDatumByChallengeId(challengeId)
+    // Nếu thử thách hợp lệ và chưa được hoàn thành, thưởng NFT cho người tham gia
+    when challengeDatum is {
+      Some(datum) -> {
+        // Tạo NFT cho người tham gia thử thách
+        let nftDatum = NFTData { owner: user, challengeId }
+        let nftMintOutput =
+          t.output(
+            t.walletAddress(user),
+            assets.from_lovelace(0),
+            InlineDatum(nftDatum),
+          )
+        let tx =
+          Transaction {
+            inputs: [],
+            outputs: [nftMintOutput],
+            extra_signatories: [user],
+          }
+
+        // Đã tham gia và nhận NFT
+        True
+      }
+      None -> fail
+    }
+  }
+
+  else(_) {
+    fail
+  }
+}
+
+test hackathonCreate() {
+  let tx = Transaction { inputs: [], outputs: [], extra_signatories: [] }
+
+  hackathon.create_challenge("daily_challenge", 1, tx)
+}
+
+test hackathonParticipate() {
+  let tx = Transaction { inputs: [], outputs: [], extra_signatories: [] }
+
+  hackathon.participate(
+    "daily_challenge",
+    #"000000000000000000000000000000000000000000000000000000000001",
+    tx,
+  )
+}
