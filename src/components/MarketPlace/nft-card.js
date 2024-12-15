@@ -41,7 +41,7 @@ export default function NFTCard({
 
         {/* Price Information */}
         {nft.price ? (
-          <p className="text-sm text-green-400 font-medium">{nft.price} ETH</p>
+          <p className="text-sm text-green-400 font-medium">{nft.price} ADA</p>
         ) : (
           <p className="text-sm text-gray-500">Not for sale</p>
         )}

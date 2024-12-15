@@ -10,7 +10,7 @@ export default function BuyNFTModal({ isOpen, onClose, onBuy, nft }) {
         </DialogHeader>
         <div className="py-4">
           <p>
-            Are you sure you want to buy {nft.name} for {nft.price} ETH?
+            Are you sure you want to buy {nft.name} for {nft.price} ADA?
           </p>
         </div>
         <DialogFooter>

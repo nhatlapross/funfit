@@ -35,7 +35,7 @@ export default function SellNFTModal({ isOpen, onClose, onSetPrice, nft }) {
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="price" className="text-right">
-                Price (ETH)
+                Price (ADA)
               </Label>
               <Input
                 id="price"

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,43 +10,113 @@ import { LoadingAnimation } from "@/components/MintNFT/loading-animation"
 import { ConfettiEffect } from "@/components/MintNFT/confetti-effect"
 import Image from 'next/image'
 import { useRouter } from 'next/router'
+import { useWallet, useAddress } from '@martifylabs/mesh-react';
+import { BrowserWallet, Transaction, ForgeScript } from '@martifylabs/mesh';
 
 export default function MintNFTPage() {
   const [isMinting, setIsMinting] = useState(false)
   const [nftName, setNftName] = useState('')
   const [mintedNFT, setMintedNFT] = useState(null)
+  const [hash, setHash] = useState('')
   const [showConfetti, setShowConfetti] = useState(false)
   const router = useRouter();
-    // Array of avatar image paths
-    const avatarImages = [
-        '/avatar/bear1.png',
-        '/avatar/bear2.png',
-        '/avatar/buffalo1.png',
-        '/avatar/buffalo2.png',
-        '/avatar/cat1.png',
-        '/avatar/cat2.png',
-        '/avatar/chicken1.png',
-        '/avatar/chicken2.png',
-        '/avatar/pig1.png',
-        '/avatar/pig2.png',
-        '/avatar/tiger1.png',
-        '/avatar/tiger2.png',
-    ]
+  const address = useAddress();
+  
+  // Array of avatar image paths
+  const avatarImages = [
+      '/avatar/bear1.png',
+      '/avatar/bear2.png',
+      '/avatar/buffalo1.png',
+      '/avatar/buffalo2.png',
+      '/avatar/cat1.png',
+      '/avatar/cat2.png',
+      '/avatar/chicken1.png',
+      '/avatar/chicken2.png',
+      '/avatar/pig1.png',
+      '/avatar/pig2.png',
+      '/avatar/tiger1.png',
+      '/avatar/tiger2.png',
+  ]
 
   const handleMint = async (e) => {
     setMintedNFT(null);
-    e.preventDefault()
-    setIsMinting(true)
-    // Select a random image
-    const randomImage = avatarImages[Math.floor(Math.random() * avatarImages.length)]
-  
+    e.preventDefault();
+    setIsMinting(true);
+    setHash('');
+
     // Simulate minting process
-    await new Promise(resolve => setTimeout(resolve, 3000))
+    //await new Promise(resolve => setTimeout(resolve, 3000))
+
+    try{
+      // await sendLace()
+      await mintNFT()
+    }
+    catch(error){
+      console.log(error);
+      alert("Please check your wallet connection and try again")
+      setIsMinting(false);
+    }
     
-    setIsMinting(false)
-    setMintedNFT(randomImage)
-    setShowConfetti(true)
-    setTimeout(() => setShowConfetti(false), 5000)
+  }
+
+  useEffect(()=>{
+    if(hash != ''){
+      // Select a random image
+      const randomImage = avatarImages[Math.floor(Math.random() * avatarImages.length)]
+  
+      setIsMinting(false)
+      setMintedNFT(randomImage)
+      setShowConfetti(true)
+      setTimeout(() => setShowConfetti(false), 5000)
+    }
+  },[hash])
+
+  const sendLace = async () => {
+    const wallet = await BrowserWallet.enable('Nami');
+    const tx = new Transaction({ initiator: wallet })
+      .sendLovelace(
+        "addr_test1qpkaf3r2xt85j7h3hvx4xtmltcuaegzjyz05ve3czyrtr9g0xlr37m45stpvqn03yfezxfgzrezntprt4u8t2jld4t7shz7cpa",
+        "1000000"
+      )
+
+    const unsignedTx = await tx.build();
+    const signedTx = await wallet.signTx(unsignedTx);
+    const txHash = await wallet.submitTx(signedTx);
+    console.log(txHash);
+    setHash(txHash);
+  }
+
+  const mintNFT = async () => {
+    console.log(address);
+    const randomImage = avatarImages[Math.floor(Math.random() * avatarImages.length)]
+    const forgingScript = ForgeScript.withOneSignature(address);
+    const assetMetadata = {
+      "name": nftName,
+      "image": randomImage,
+      "mediaType": "image/png",
+      "description": "Funfit AI Trainer NFT."
+    };
+    
+    const asset = {
+      assetName: 'MeshToken',
+      assetQuantity: '1',
+      metadata: assetMetadata,
+      label: '721',
+      recipient: 'addr_test1vpvx0sacufuypa2k4sngk7q40zc5c4npl337uusdh64kv0c7e4cxr' 
+    };
+    const wallet = await BrowserWallet.enable('Nami');
+
+    const tx = new Transaction({ initiator: wallet });
+    tx.mintAsset(
+      forgingScript,
+      asset,
+    );
+
+    const unsignedTx = await tx.build();
+    const signedTx = await wallet.signTx(unsignedTx);
+    const txHash = await wallet.submitTx(signedTx);
+    console.log(txHash);
+    setHash(txHash);
   }
 
   return (
@@ -111,7 +181,7 @@ export default function MintNFTPage() {
                     objectFit="cover"
                   />
                 </div>
-                <button className='border-2 bg-blue-700 text-white mt-2' onClick={()=>router.push('/mission')}>Start your first exercise!</button>
+                <button className='border-2 border-white text-white mt-2' onClick={()=>router.push('/mission')}>Start your first exercise!</button>
               </motion.div>
             )}
           </AnimatePresence>

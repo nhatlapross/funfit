@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import NFTCard from '@/components/MarketPlace/nft-card'
 import SellNFTModal from '@/components/MarketPlace/sell-nft-modal'
 import BuyNFTModal from '@/components/MarketPlace/buy-nft-modal'
+import { BrowserWallet, Transaction } from '@martifylabs/mesh';
 
 const mockNFTs = [
     { 
@@ -76,34 +77,91 @@ export default function NFTMarketplace() {
     const [isSellModalOpen, setIsSellModalOpen] = useState(false)
     const [isBuyModalOpen, setIsBuyModalOpen] = useState(false)
     const [activeTab, setActiveTab] = useState('market')
-
+    const [hash, setHash] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [isBuy, setIsBuy] = useState(false);
+    const [isSell, setIsSell] = useState(false);
+    const [selectedPrice, setSelectedPrice] = useState(null);
     const handleSellNFT = (nft) => {
         setSelectedNFT(nft)
         setIsSellModalOpen(true)
+        setIsLoading(true)
+        setIsSell(true)
     }
 
     const handleBuyNFT = (nft) => {
         setSelectedNFT(nft)
         setIsBuyModalOpen(true)
+        setIsLoading(true)
+        setIsBuy(true)
     }
 
-    const handleSetPrice = (price) => {
-        if (selectedNFT) {
-            const updatedNFTs = nfts.map((nft) =>
-                nft.id === selectedNFT.id ? { ...nft, price, owner: '0xMarket' } : nft
-            )
-            setNfts(updatedNFTs)
-            setIsSellModalOpen(false)
+    const handleSetPrice = async(price) => {
+        setHash('');
+        setSelectedPrice(price);
+        
+        if (selectedNFT && isLoading) {
+            setIsLoading(false);
+            
+            try{
+                await sendLace(price)
+              }
+              catch(error){
+                alert("Please check your wallet connection and try again")
+                console.log(error);
+            }
+            // setIsSellModalOpen(false)
         }
     }
 
-    const handleBuy = () => {
-        if (selectedNFT) {
+     useEffect(()=>{
+        if(hash != '' && isSellModalOpen && selectedNFT && isSell){
+            const updatedNFTs = nfts.map((nft) =>
+                nft.id === selectedNFT.id ? { ...nft, price: selectedPrice, owner: '0xMarket' } : nft
+            )
+            console.log("sell:",updatedNFTs);
+            setNfts(updatedNFTs)
+            setIsSell(false)
+            setIsSellModalOpen(false)
+        }
+        if(hash != '' && isBuyModalOpen && selectedNFT && isBuy){
+            console.log(selectedNFT);
             const updatedNFTs = nfts.map((nft) =>
                 nft.id === selectedNFT.id ? { ...nft, price: null, owner: '0x1234...5678' } : nft
             )
+            console.log("buy:",updatedNFTs);
             setNfts(updatedNFTs)
+            setIsBuy(false)
             setIsBuyModalOpen(false)
+        }
+      },[hash])
+
+    const sendLace = async (num) => {
+        const wallet = await BrowserWallet.enable('Nami');
+        const tx = new Transaction({ initiator: wallet })
+          .sendLovelace(
+            "addr_test1qpkaf3r2xt85j7h3hvx4xtmltcuaegzjyz05ve3czyrtr9g0xlr37m45stpvqn03yfezxfgzrezntprt4u8t2jld4t7shz7cpa",
+            (num * 1000000).toString()
+          )
+    
+        const unsignedTx = await tx.build();
+        const signedTx = await wallet.signTx(unsignedTx);
+        const txHash = await wallet.submitTx(signedTx);
+        console.log(txHash);
+        setHash(txHash);
+      }
+
+    const handleBuy = async() => {
+        if (selectedNFT && isLoading) {
+            setIsLoading(false);
+           
+            try{
+                await sendLace(selectedNFT.price)
+            }
+            catch(error){
+                alert("Please check your wallet connection and try again")
+                console.log(error);
+            }
         }
     }
 
