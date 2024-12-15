@@ -18,8 +18,8 @@ const findAngle = (p1, p2, p3) => {
 const AdvancedSquatCounter = () => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
-  const [correctSquats, setCorrectSquats] = useState(5);
-  const [incorrectSquats, setIncorrectSquats] = useState(42);
+  const [correctSquats, setCorrectSquats] = useState(0);
+  const [incorrectSquats, setIncorrectSquats] = useState(0);
   const [feedback, setFeedback] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -420,7 +420,7 @@ const AdvancedSquatCounter = () => {
       router.push('/mission');
     }
     if (correctSquats + incorrectSquats == 50) {
-      window.alert("Your mission success!");
+      window.alert("Your mission fail!");
       router.push('/mission');
     }
 
