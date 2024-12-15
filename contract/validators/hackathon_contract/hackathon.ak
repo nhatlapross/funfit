@@ -187,7 +187,6 @@
 
 use aiken/collection/dict
 use aiken/collection/list
-use cardano/crypto.{VerificationKey}
 use cardano/assets.{PolicyId}
 use cardano/transaction.{OutputReference, Transaction}
 

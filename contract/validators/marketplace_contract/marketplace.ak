@@ -88,8 +88,7 @@ use aiken/collection/list
 validator marketplace {
 
   // Mua NFT
-  buy_nft(r: Redeemer, nftId: String, tx: Transaction) -> Bool {
-    let nftDatum = tx.findDatumById(nftId) // Thay 't' bằng 'tx'
+// 
 
     // Kiểm tra NFT có tồn tại
     when nftDatum is {
@@ -122,7 +121,10 @@ validator marketplace {
 
   // Delist NFT khỏi marketplace
   delist_nft(r: Redeemer, nftId: String, tx: Transaction) -> Bool {
-    let nftDatum = tx.findDatumById(nftId) // Thay 't' bằng 'tx'
+    // Kiểm tra đầu ra giao dịch (outputs) để tìm Datum
+    let nftDatum = tx.outputs |> List.filter(
+      fun o |> o.datum == nftId
+    )
 
     // Kiểm tra nếu NFT tồn tại
     when nftDatum is {

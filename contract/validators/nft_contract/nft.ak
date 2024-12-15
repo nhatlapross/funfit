@@ -284,7 +284,6 @@ use aiken/primitive/string
 
 use cardano/assets.{PolicyId}
 use cardano/transaction.{InlineDatum, OutputReference, Transaction}
-use course/types.{NFTData}
 
 pub type Level =
   Int
@@ -310,6 +309,11 @@ pub type NFTData {
   vesting_end: Timestamp,
 }
 
+pub type Redeemer {
+  action: String,        // Loại hành động: "edit", "add", "withdraw", "join"
+  nft_id: String,        // ID của NFT
+  additional_data: Int, // Dữ liệu bổ sung (nếu cần), ví dụ: số điểm cần thêm hoặc rút
+}
 // Thời gian kết thúc vesting
 
 pub const owner_address =
@@ -324,7 +328,7 @@ validator nft {
     newPoint: Int,
     tx: Transaction,
   ) {
-    let nftDatum = t.findDatumById(nftId)
+    let nftDatum = r.findDatumById(nftId)
 
     // Kiểm tra nếu NFT tồn tại
     when nftDatum is {
