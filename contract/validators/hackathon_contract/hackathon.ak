@@ -189,6 +189,8 @@ use aiken/collection/dict
 use aiken/collection/list
 use cardano/assets.{PolicyId}
 use cardano/transaction.{OutputReference, Transaction}
+use cardano/keys.{VerificationKey}
+
 
 validator hackathon {
   create_challenge(challengeId: String, rewardAmount: Int, tx: Transaction) {

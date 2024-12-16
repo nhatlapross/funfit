@@ -88,34 +88,37 @@ use aiken/collection/list
 validator marketplace {
 
   // Mua NFT
-// 
-
+  buy_nft(r: Redeemer, nftId: String, tx: Transaction) -> Bool {
     // Kiểm tra NFT có tồn tại
-    when nftDatum is {
-      Some(updatedNFT) -> {
-        // Kiểm tra người mua đã trả đủ tiền (hoặc ADA)
-        let payment = tx.inputs[0].value // Giả sử người mua trả tiền qua đầu vào giao dịch
+    let nftDatum = tx.outputs |> List.filter(
+      fun o |> o.datum == nftId
+    )
 
-        // Logic kiểm tra số tiền đã thanh toán
-        if payment >= updatedNFT.price {
-          // Cập nhật trạng thái bán hàng và chuyển NFT cho người mua
-          let output = tx.output(
-            tx.walletAddress(#"f4c9f9c4252d86702c2f4c2e49e6648c7cffe3c8f2b6b7d779788f50"),
-            assets.from_lovelace(payment),
-            InlineDatum(updatedNFT)
-          )
+    if List.is_empty(nftDatum) {
+      fail // NFT không tồn tại
+    } else {
+      let updatedNFT = List.head(nftDatum)
 
-          let tx = Transaction {
-            inputs: [],
-            outputs: [output],
-            extra_signatories: [],
-          }
-          True
-        } else {
-          fail // Người mua chưa trả đủ tiền
+      // Kiểm tra người mua đã trả đủ tiền (hoặc ADA)
+      let payment = tx.inputs[0].value // Giả sử người mua trả tiền qua đầu vào giao dịch
+
+      if payment >= updatedNFT.price {
+        // Cập nhật trạng thái bán hàng và chuyển NFT cho người mua
+        let output = tx.output(
+          tx.walletAddress(#"f4c9f9c4252d86702c2f4c2e49e6648c7cffe3c8f2b6b7d779788f50"),
+          assets.from_lovelace(payment),
+          InlineDatum(updatedNFT)
+        )
+
+        let tx = Transaction {
+          inputs: [],
+          outputs: [output],
+          extra_signatories: [],
         }
-      } 
-      None -> fail // NFT không tồn tại
+        True
+      } else {
+        fail // Người mua chưa trả đủ tiền
+      }
     }
   }
 
@@ -126,29 +129,29 @@ validator marketplace {
       fun o |> o.datum == nftId
     )
 
-    // Kiểm tra nếu NFT tồn tại
-    when nftDatum is {
-      Some(nft) -> {
-        // Kiểm tra nếu người gọi là chủ sở hữu NFT
-        let owner = nft.owner // Giả sử dữ liệu NFT chứa thông tin chủ sở hữu
-        if owner == tx.walletAddress(#"f4c9f9c4252d86702c2f4c2e49e6648c7cffe3c8f2b6b7d779788f51") {                                     
-          let output = tx.output(
-            tx.walletAddress(#"f4c9f9c4252d86702c2f4c2e49e6648c7cffe3c8f2b6b7d779788f52"),                              
-            assets.from_lovelace(0),
-            InlineDatum(nft),
-          )
+    if List.is_empty(nftDatum) {
+      fail // NFT không tồn tại
+    } else {
+      let nft = List.head(nftDatum)
 
-          let tx = Transaction {
-            inputs: [],
-            outputs: [output],
-            extra_signatories: [],
-          }
-          True
-        } else {
-          fail // Chỉ chủ sở hữu mới có quyền delist
+      // Kiểm tra nếu người gọi là chủ sở hữu NFT
+      let owner = nft.owner // Giả sử dữ liệu NFT chứa thông tin chủ sở hữu
+      if owner == tx.walletAddress(#"f4c9f9c4252d86702c2f4c2e49e6648c7cffe3c8f2b6b7d779788f51") {                                     
+        let output = tx.output(
+          tx.walletAddress(#"f4c9f9c4252d86702c2f4c2e49e6648c7cffe3c8f2b6b7d779788f52"),                              
+          assets.from_lovelace(0),
+          InlineDatum(nft),
+        )
+
+        let tx = Transaction {
+          inputs: [],
+          outputs: [output],
+          extra_signatories: [],
         }
+        True
+      } else {
+        fail // Chỉ chủ sở hữu mới có quyền delist
       }
-      None -> fail // NFT không tồn tại
     }
   }
 }
@@ -172,3 +175,4 @@ test delistNFT() {
   }
   marketplace.delist_nft(MDelist, "nft_1", tx)
 }
+
