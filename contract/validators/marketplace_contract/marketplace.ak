@@ -135,7 +135,7 @@ validator marketplace {
           let output = tx.output(
             tx.walletAddress(#"f4c9f9c4252d86702c2f4c2e49e6648c7cffe3c8f2b6b7d779788f52"),                              
             assets.from_lovelace(0),
-            InlineDatum(nft)
+            InlineDatum(nft),
           )
 
           let tx = Transaction {
